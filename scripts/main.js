@@ -8,7 +8,7 @@ const cardsData = [
   {
     title: "Мгновение",
     desc: "Компактный формат для лаконичных мыслей. Идеально для вложений в букет.",
-    format: "A5",
+    format: "A6",
     image: "assets/cards/snake.jpg",
   },
 ];
@@ -19,7 +19,7 @@ const quotes = [
   "«В мире, где слишком много шума, истина рождается в тишине».",
 ];
 
-const heroImages = ["2.jpg", "3.jpg", "4.jpg"];
+const heroImages = ["2.jpg", "4.jpg"];
 
 function renderGallery() {
   const container = document.getElementById("catalog-container");
@@ -27,7 +27,6 @@ function renderGallery() {
 
   container.innerHTML = cardsData
     .map((card) => {
-      // Здесь строго проверяем формат для CSS-класса
       const formatClass = card.format === "A5" ? "card-a5" : "card-a6";
       return `
             <div class="product-card ${formatClass}">

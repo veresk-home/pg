@@ -1,98 +1,264 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Quest Fix</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/threejs/r128/three.min.js"></script>
-    <style>
-        body { margin: 0; background: #222; overflow: hidden; font-family: sans-serif; }
-        #error-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            display: none; background: rgba(0,0,0,0.8); color: white; 
-            justify-content: center; align-items: center; text-align: center;
-        }
-    </script>
-</head>
-<body>
-    <div id="error-overlay"><h1>Ошибка: Библиотека всё еще не грузится</h1></div>
-
-    <script>
-        // Проверка загрузки
-        if (typeof THREE === 'undefined') {
-            document.getElementById('error-overlay').style.display = 'flex';
-        } else {
-            initScene();
-        }
-
-        function initScene() {
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
-
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // Создаем слои
-            const layers = [];
-            const loader = new THREE.TextureLoader();
-
-            // ФОН (Картинка)
-            const bgMat = new THREE.MeshBasicMaterial({ color: 0x444444 });
-            // Пробуем загрузить твою картинку
-            loader.load('assets/hero-bg/4.jpg', 
-                (t) => { bgMat.map = t; bgMat.needsUpdate = true; },
-                undefined,
-                () => { console.log("Файл 4.jpg не найден, использую заглушку"); }
-            );
-            const bg = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), bgMat);
-            bg.position.z = -2;
-            scene.add(bg);
-            layers.push({ m: bg, f: 0.05 });
-
-            // СРЕДНИЙ СЛОЙ (Зеленые кружки)
-            const group = new THREE.Group();
-            for(let i=0; i<10; i++) {
-                const c = new THREE.Mesh(new THREE.CircleGeometry(0.2, 32), new THREE.MeshBasicMaterial({color: 0x00ff88}));
-                c.position.set(Math.random()*6-3, Math.random()*4-2, 0);
-                group.add(c);
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Вереск | Мастерская авторских открыток</title>
+        <link rel="stylesheet" href="style.css" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Montserrat:wght@200;300;400&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* Дополнительные стили для слайдера, которые нужно добавить в style.css или оставить здесь */
+            .slider-container {
+                position: relative;
+                width: 100%;
+                height: 500px;
+                overflow: hidden;
+                background: rgba(58, 53, 48, 0.05);
             }
-            group.position.z = 0;
-            scene.add(group);
-            layers.push({ m: group, f: 0.2 });
 
-            // ПЕРЕДНИЙ СЛОЙ (Кнопки)
-            const btn = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.4), new THREE.MeshBasicMaterial({color: 0x0088ff}));
-            btn.position.z = 2;
-            scene.add(btn);
-            layers.push({ m: btn, f: 0.5 });
+            .slider-track {
+                display: flex;
+                transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+                height: 100%;
+            }
 
-            let mx = 0, my = 0;
-            window.addEventListener('mousemove', (e) => {
-                mx = (e.clientX / window.innerWidth) * 2 - 1;
-                my = -(e.clientY / window.innerHeight) * 2 + 1;
-            });
+            .slide {
+                min-width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
 
-            // Наклон для Квеста
-            window.addEventListener('deviceorientation', (e) => {
-                if (e.gamma) {
-                    mx = e.gamma / 40;
-                    my = (e.beta - 90) / 40;
+            .slider-btn {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(255, 255, 255, 0.7);
+                border: none;
+                width: 40px;
+                height: 40px;
+                cursor: pointer;
+                font-size: 1.2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                z-index: 10;
+                color: var(--text-dark);
+                border-radius: 50%;
+            }
+
+            .slider-btn:hover {
+                background: #fff;
+            }
+            .slider-btn.prev {
+                left: 15px;
+            }
+            .slider-btn.next {
+                right: 15px;
+            }
+
+            .slider-dots {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 8px;
+                z-index: 10;
+            }
+
+            .dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: rgba(58, 53, 48, 0.2);
+                cursor: pointer;
+                transition: background 0.3s;
+            }
+
+            .dot.active {
+                background: var(--text-dark);
+            }
+
+            @media (max-width: 768px) {
+                .slider-container {
+                    height: 350px;
                 }
-            });
-
-            function animate() {
-                requestAnimationFrame(animate);
-                layers.forEach(l => {
-                    l.m.position.x += (mx * l.f * 4 - l.m.position.x) * 0.1;
-                    l.m.position.y += (my * l.f * 4 - l.m.position.y) * 0.1;
-                });
-                renderer.render(scene, camera);
             }
-            animate();
-        }
-    </script>
-</body>
+        </style>
+    </head>
+    <body>
+        <section class="hero-section" id="hero">
+            <div class="hero-logo">Вереск</div>
+            <div class="hero-overlay"></div>
+            <div class="hero-container">
+                <h1 class="hero-title">
+                    Тишина, воплощенная <br /><i>на бумаге</i>
+                </h1>
+                <p class="hero-quote" id="dynamic-quote"></p>
+            </div>
+        </section>
+
+        <section class="catalog-section">
+            <div class="content-limit">
+                <div class="section-header header-center">
+                    <div class="horizontal-line"></div>
+                    <span class="intro-label">Наличие</span>
+                    <div class="horizontal-line"></div>
+                </div>
+
+                <div class="catalog-grid" id="stock-container"></div>
+
+                <div class="ritual-section">
+                    <div class="section-header header-center">
+                        <div class="horizontal-line"></div>
+                        <span class="intro-label">Ритуал</span>
+                        <div class="horizontal-line"></div>
+                    </div>
+                    <div class="ritual-content">
+                        <p class="ritual-text">
+                            Ритуал: вы зажигаете свечу, вдыхаете аромат хлопка и
+                            позволяете времени замедлиться. В этом моменте нет
+                            шума внешнего мира — только вы и ваши мысли,
+                            запечатленные на бумаге. Каждое прикосновение к
+                            фактурному листу возвращает вас в состояние покоя и
+                            ясности.
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    class="section-header header-center"
+                    style="margin-top: 100px"
+                >
+                    <div class="horizontal-line"></div>
+                    <span class="intro-label">Галерея</span>
+                    <div class="horizontal-line"></div>
+                </div>
+
+                <div class="gallery-intro">
+                    <div class="gallery-images-column">
+                        <div class="slider-container">
+                            <div class="slider-track">
+                                <img
+                                    src="assets/cards/Свеча.jpg"
+                                    alt="Подарочный бокс Вереск"
+                                    class="slide"
+                                />
+                                <img
+                                    src="assets/cards/открытка.jpg"
+                                    alt="Процесс создания"
+                                    class="slide"
+                                />
+                                <img
+                                    src="assets/cards/Хлопок.png"
+                                    alt="Детали фактуры"
+                                    class="slide"
+                                />
+                            </div>
+                            <button class="slider-btn prev" aria-label="Назад">
+                                &#10229;
+                            </button>
+                            <button class="slider-btn next" aria-label="Вперед">
+                                &#10230;
+                            </button>
+                            <div class="slider-dots"></div>
+                        </div>
+                    </div>
+
+                    <div class="gallery-specs">
+                        <div class="spec-item">
+                            <h4>Материал</h4>
+                            <p>
+                                100% органический хлопок премиального качества,
+                                плотностью 300 г/м².
+                            </p>
+                        </div>
+                        <div class="spec-item">
+                            <h4>Роспись</h4>
+                            <p>Акварельная роспись</p>
+                        </div>
+                        <div class="spec-item">
+                            <h4>Ощущения</h4>
+                            <p>
+                                Мягкая, бархатистая фактура, к которой хочется
+                                прикасаться снова и снова.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-action">
+                    <a
+                        href="https://docs.google.com/forms/d/e/1FAIpQLScLebfGuliTBwyPZFYvW3HbtZ9_FVBtFp-27VEwyo9dbm46SA/viewform?usp=dialog"
+                        target="_blank"
+                        class="btn-order"
+                        >Сделать заказ</a
+                    >
+                </div>
+            </div>
+        </section>
+
+        <section class="contacts-section">
+            <div class="content-limit">
+                <div class="section-header header-center">
+                    <div class="horizontal-line"></div>
+                    <span class="intro-label">Контакты</span>
+                    <div class="horizontal-line"></div>
+                </div>
+                <div class="social-minimal-container">
+                    <div class="contacts-flex">
+                        <div class="contact-email">
+                            Для связи: stefankiv.trend@gmail.com
+                        </div>
+                        <div class="social-images-grid">
+                            <a
+                                href="https://www.tiktok.com/@astefart?_r=1&_t=ZS-94FQpWlMkgm"
+                                target="_blank"
+                                class="contact-image-link"
+                            >
+                                <img
+                                    src="assets/icons/tiktok-btn.png"
+                                    alt="TikTok"
+                                />
+                            </a>
+                            <a
+                                href="https://t.me/gameofherlife"
+                                target="_blank"
+                                class="contact-image-link"
+                            >
+                                <img
+                                    src="assets/icons/tg-btn.png"
+                                    alt="Telegram"
+                                />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mini-footer">
+            <div class="content-limit">
+                <p>2026 ВЕРЕСК</p>
+                <p style="margin-top: 10px">
+                    <a
+                        href="oferta.html"
+                        target="_blank"
+                        style="
+                            text-decoration: none;
+                            color: #8a827a;
+                            font-size: 0.6rem;
+                        "
+                        >Публичная оферта и конфиденциальность</a
+                    >
+                </p>
+            </div>
+        </footer>
+
+        <script src="scripts/main.js"></script>
+    </body>
 </html>

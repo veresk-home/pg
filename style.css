@@ -438,30 +438,99 @@ body {
         display: block;
         margin-top: 10px;
     }
+    /* --- ОБЩАЯ МОБИЛЬНАЯ АДАПТАЦИЯ --- */
     @media (max-width: 768px) {
-        /* ... ваши предыдущие стили ... */
-
-        .contacts-flex {
-            flex-direction: column; /* Элементы встают друг под друга */
-            justify-content: center; /* Центрируем по вертикали (если есть высота) */
-            align-items: center;    /* Центрируем по горизонтали */
-            text-align: center;     /* Центрируем текст внутри */
-            gap: 25px;              /* Расстояние между почтой и иконками */
+        :root {
+            --section-spacing: 60px;
+            --header-margin: 30px;
         }
 
-        .social-images-grid {
-            justify-content: center; /* Центрируем сами иконки внутри их контейнера */
+        html {
+            font-size: 13px; /* Немного уменьшаем базовый шрифт */
+        }
+
+        .content-limit {
+            padding: 0 20px; /* Уменьшаем поля по бокам */
+        }
+
+        /* Hero Section */
+        .hero-title {
+            font-size: 2.2rem;
+        }
+
+        /* Карточки товаров */
+        .catalog-grid {
+            gap: 20px;
+        }
+
+        .product-card {
+            min-width: 100%;
+            max-width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .product-card.horizontal {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-card.horizontal .product-image-wrapper {
+            height: 300px;
+            flex: none;
+        }
+
+        .product-image-wrapper {
+            height: 300px;
+        }
+
+        /* Галерея (Слайдер + Инфо) */
+        .gallery-intro {
+            flex-direction: column; /* Стек: слайдер сверху, текст снизу */
+            gap: 30px;
+        }
+
+        .gallery-images-column,
+        .gallery-specs {
             width: 100%;
         }
 
-        .contact-email {
-            margin-bottom: 5px;      /* Небольшой отступ снизу для воздуха */
+        .slider-container {
+            height: 350px; /* Уменьшаем высоту слайдера */
+        }
+
+        .gallery-specs {
+            position: static; /* Отключаем sticky на мобилках */
+        }
+
+        .spec-item {
+            text-align: center;
+        }
+
+        /* Контакты */
+        .contacts-flex {
+            flex-direction: column;
+            text-align: center;
+            gap: 30px;
+        }
+
+        .order-action {
+            padding-top: 30px;
+        }
+
+        .btn-order {
+            width: 100%;
+            text-align: center;
+            padding: 15px 20px;
         }
     }
 
-    /* Базовые стили (вне медиа-запроса), проверьте чтобы было так: */
-    .social-images-grid {
-        display: flex;
-        gap: 20px;
-        align-items: center;
+    /* Фикс для очень маленьких экранов (iPhone SE и т.д.) */
+    @media (max-width: 380px) {
+        .hero-title {
+            font-size: 1.8rem;
+        }
+        .intro-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.2rem;
+        }
     }

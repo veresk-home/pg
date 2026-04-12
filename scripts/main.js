@@ -15,7 +15,7 @@ const cardsData = [
   },
   {
     title: "Персональный код",
-    desc: "Единственный экземпляр. Ваш сюжет, препарированный и зафиксированный моими руками. Право на эксклюзивную тишину в мире, который слишком много говорит",
+    desc: "Единственный экземпляр. Ваш сюжет, препарированный и зафиксированный моими руками. Это не открытка, это материализация вашего внутреннего монолога. Право на эксклюзивную тишину в мире, который слишком много говорит.",
     format: "A6",
     price: "Цена: 1500₽",
     image: "assets/cards/Открытка память.jpg",
@@ -41,21 +41,29 @@ const quotes = [
 
 const heroImages = ["Шахматы пустой.jpg"];
 
+/**
+ * Корректировка высоты для мобильных браузеров (фикс 100vh)
+ */
+function updateViewportHeight() {
+  let vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
+}
+
 function createCardHTML(card) {
   const layoutClass = card.isHorizontal ? "horizontal" : "";
 
   return `
-    <div class="product-card ${layoutClass}">
-        <div class="product-image-wrapper">
-            <img src="${card.image}" alt="${card.title}">
-            </div>
-        <div class="product-info">
-            <h3>${card.title}</h3>
-            <p>${card.desc}</p>
-            <div class="product-price">${card.price}</div>
-        </div>
-    </div>
-  `;
+      <div class="product-card ${layoutClass}">
+          <div class="product-image-wrapper">
+              <img src="${card.image}" alt="${card.title}">
+              </div>
+          <div class="product-info">
+              <h3>${card.title}</h3>
+              <p>${card.desc}</p>
+              <div class="product-price">${card.price}</div>
+          </div>
+      </div>
+    `;
 }
 
 function renderGallery() {
@@ -79,8 +87,7 @@ function initSlider() {
 
   let currentIndex = 0;
 
-  // Создаем точки индикации
-  dotsContainer.innerHTML = ""; // Очистка на случай повторной инициализации
+  dotsContainer.innerHTML = "";
   slides.forEach((_, index) => {
     const dot = document.createElement("div");
     dot.classList.add("dot");
@@ -96,12 +103,10 @@ function initSlider() {
     const width = slides[0].getBoundingClientRect().width;
     track.style.transform = `translateX(-${currentIndex * width}px)`;
 
-    // Обновляем состояние точек
     dots.forEach((d) => d.classList.remove("active"));
     if (dots[currentIndex]) dots[currentIndex].classList.add("active");
   }
 
-  // Слушатели кнопок
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
       currentIndex = (currentIndex + 1) % slides.length;
@@ -116,10 +121,11 @@ function initSlider() {
     });
   }
 
-  // Пересчет позиции при изменении размера окна
   window.addEventListener("resize", () => {
-    // Небольшая задержка, чтобы браузер успел обновить ширину блоков
-    setTimeout(() => updateSlider(currentIndex), 100);
+    setTimeout(() => {
+      updateSlider(currentIndex);
+      updateViewportHeight(); // Обновляем высоту при повороте экрана
+    }, 100);
   });
 }
 
@@ -127,26 +133,23 @@ function initSlider() {
  * Главная инициализация
  */
 function init() {
+  // Сразу считаем высоту экрана
+  updateViewportHeight();
+
   const hero = document.getElementById("hero");
   const quoteEl = document.getElementById("dynamic-quote");
 
-  // Установка фона Hero
   if (hero) {
     const randomImg = heroImages[Math.floor(Math.random() * heroImages.length)];
     hero.style.backgroundImage = `url('assets/hero-bg/${randomImg}')`;
   }
 
-  // Установка случайной цитаты
   if (quoteEl) {
     quoteEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
   }
 
-  // Отрисовка товаров
   renderGallery();
-
-  // Запуск слайдера
   initSlider();
 }
 
-// Запуск при полной загрузке DOM
 window.addEventListener("DOMContentLoaded", init);

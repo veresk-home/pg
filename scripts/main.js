@@ -153,3 +153,36 @@ function init() {
 }
 
 window.addEventListener("DOMContentLoaded", init);
+// Вставьте это в конец функции initSlider()
+let touchStartX = 0;
+let touchEndX = 0;
+
+track.addEventListener(
+  "touchstart",
+  (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  },
+  { passive: true },
+);
+
+track.addEventListener(
+  "touchend",
+  (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleGesture();
+  },
+  { passive: true },
+);
+
+function handleGesture() {
+  if (touchStartX - touchEndX > 50) {
+    // Свайп влево -> следующий слайд
+    currentIndex = (currentIndex + 1) % slides.length;
+    updateSlider(currentIndex);
+  }
+  if (touchEndX - touchStartX > 50) {
+    // Свайп вправо -> предыдущий слайд
+    currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+    updateSlider(currentIndex);
+  }
+}
